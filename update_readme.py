@@ -8,8 +8,8 @@ readme_file = "README.md"
 table_lines = []
 table_lines.append("### Historical Stock Performance")
 table_lines.append("")
-table_lines.append("| Date | Stock Value |")
-table_lines.append("| :--- | :---------- |")
+table_lines.append("| Date | Stock Value | Cash | Account Value |")
+table_lines.append("| :--- | :---------- | :--- | :------------ |")
 
 try:
     with open(csv_file, "r") as f:
@@ -17,10 +17,11 @@ try:
         for row in reader:
             # key 'Stock Value' might vary if there are extra spaces, strictly checking headers might be needed
             # But usually DictReader handles it if the header is clean.
-            # The provided content shows "Stock Value" as the 3rd column.
             stock_val = row.get("Stock Value", "")
             date_val = row.get("Date", "")
-            table_lines.append(f"| {date_val} | {stock_val} |")
+            cash_val = row.get("Cash", "")
+            account_val = row.get("Account Value", "")
+            table_lines.append(f"| {date_val} | {stock_val} | {cash_val} | {account_val} |")
 except FileNotFoundError:
     print(f"Error: {csv_file} not found.")
     exit(1)
@@ -36,16 +37,34 @@ except FileNotFoundError:
     exit(1)
 
 # Insert Table
-# We look for "Last updated on" to insert before it.
-marker = "Last updated on"
-if marker in readme_content:
-    parts = readme_content.split(marker)
-    # parts[0] is everything before, parts[1] is everything after (likely just the date)
-    # We want to insert at the end of parts[0], but maybe ensure some spacing.
-    new_content = parts[0].rstrip() + "\n\n" + table_content + marker + parts[1]
+header_marker = "### Historical Stock Performance"
+end_marker = "Last updated on"
+
+# Check if the old history table exists
+start_index = readme_content.find(header_marker)
+
+if start_index != -1:
+    # Found the old table header, remove the old history
+    end_index = readme_content.find(end_marker, start_index)
+    
+    if end_index != -1:
+        # Replace content between start_index and end_index (start of footer)
+        pre_content = readme_content[:start_index].rstrip()
+        post_content = readme_content[end_index:]
+        new_content = pre_content + "\n\n" + table_content + post_content
+    else:
+        # No end marker found after start marker. Replace until end of file.
+        pre_content = readme_content[:start_index].rstrip()
+        new_content = pre_content + "\n\n" + table_content
 else:
-    # If marker not found, append to end
-    new_content = readme_content + "\n\n" + table_content
+    # Table not present, insert it normally
+    if end_marker in readme_content:
+        parts = readme_content.split(end_marker)
+        # Insert before the end marker
+        new_content = parts[0].rstrip() + "\n\n" + table_content + end_marker + parts[1]
+    else:
+        # If marker not found, append to end
+        new_content = readme_content + "\n\n" + table_content
 
 # Write README
 with open(readme_file, "w") as f:
