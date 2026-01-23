@@ -1,6 +1,6 @@
 # Investment Portfolio Analysis
 
-An automated analysis of investment performance, tracking both cryptocurrency and stock market assets.
+An automated analysis of investment performance that tracks both cryptocurrency and stock market assets in investopedia stock simulator.
 
 ## Overview
 
